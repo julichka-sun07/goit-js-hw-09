@@ -7,10 +7,13 @@
 //   }
 // }
 
+import Notiflix from 'notiflix';
+
+
 function createPromise(position, delay) {
   return new Promise((resolve, reject) => {
-    const shouldResolve = Math.random() > 0.3;
     setTimeout(() => {
+      const shouldResolve = Math.random() > 0.3;
       if (shouldResolve) {
         resolve({ position, delay });
       } else {
@@ -20,41 +23,31 @@ function createPromise(position, delay) {
   });
 }
 
-const form = document.querySelector('.form');
-const resultContainer = document.createElement('div');
-form.insertAdjacentElement('afterend', resultContainer);
-
-form.addEventListener('submit', function (event) {
+function handleFormSubmit(event) {
   event.preventDefault();
+  const form = event.target;
+  const delay = parseInt(form.delay.value);
+  const step = parseInt(form.step.value);
+  const amount = parseInt(form.amount.value);
 
-  const delayInput = document.querySelector('input[name="delay"]');
-  const stepInput = document.querySelector('input[name="step"]');
-  const amountInput = document.querySelector('input[name="amount"]');
+  if (delay < 0 || step < 0 || amount < 0) {
+    Notiflix.Notify.failure('❌ Please enter only positive values');
+    return;
+  }
 
-  const delay = parseInt(delayInput.value);
-  const step = parseInt(stepInput.value);
-  const amount = parseInt(amountInput.value);
+  for (let i = 1; i <= amount; i++) {
+    const position = i;
+    const promiseDelay = delay + (i - 1) * step;
 
-  resultContainer.innerHTML = ''; // Очищення контейнера з результатами
-
-  for (let i = 0; i < amount; i++) {
-    const position = i + 1;
-    createPromise(position, delay + step * i)
+    createPromise(position, promiseDelay)
       .then(({ position, delay }) => {
-        const message = `✅ Fulfilled promise ${position} in ${delay}ms`;
-        const messageElement = document.createElement('p');
-        messageElement.textContent = message;
-        messageElement.classList.add('fulfilled');
-        resultContainer.appendChild(messageElement);
-        console.log(message);
+        Notiflix.Notify.success(`✅ Fulfilled promise ${position} in ${delay}ms`);
       })
       .catch(({ position, delay }) => {
-        const message = `❌ Rejected promise ${position} in ${delay}ms`;
-        const messageElement = document.createElement('p');
-        messageElement.textContent = message;
-        messageElement.classList.add('rejected');
-        resultContainer.appendChild(messageElement);
-        console.log(message);
+        Notiflix.Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`);
       });
   }
-});
+}
+
+const form = document.querySelector('.form');
+form.addEventListener('submit', handleFormSubmit);
